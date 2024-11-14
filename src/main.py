@@ -13,7 +13,7 @@ def main():
     conexao,conectado = conectar_banco()
     while conectado:
         os.system('clear')
-        print('-----------Controle Integrado Doencas e Pragas-----------------')
+        print('-----------Controle Irrigação-----------------')
         print("""
         1 - Sensores
         2 - Leituras

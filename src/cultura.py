@@ -24,7 +24,7 @@ def criar_cultura(conexao):
         cursor.execute(cadastro)
         conexao.commit()
         cursor.close()
-        print('\n cultura cadastrado com suscesso')
+        print('\n cultura cadastrado com sucesso')
     except cx_Oracle.DatabaseError as e:
         print(f"Erro ao criar cultura: {e}")
     input(' Pressione enter para continuar')
@@ -44,7 +44,7 @@ def listar_culturas(conexao):
             lista_dados.append(cultura)
         lista_dados = sorted(lista_dados)
         # Gera um Dataframe com os dados da lista usando o Pandas
-        dados_df = pd.DataFrame.from_records(lista_dados, columns = ['Id', 'nome', 'nivel_P', 'nivel_k', 'nivel_ph', 'umidade'], 
+        dados_df = pd.DataFrame.from_records(lista_dados, columns = ['Id', 'nome', 'nivel_p', 'nivel_k', 'nivel_ph', 'umidade'], 
                                              index ='Id')
         if dados_df.empty:
             print(f'Não há culturas cadastrados!!')
@@ -75,7 +75,7 @@ def alterar_cultura(conexao):
             lista_dados.append(dt)
         
         if len(lista_dados)==0:
-            print(f'Não há um cultura cadastrado com o ID = {id_cultura}')
+            print(f'Não há um cultura cadastrada com o ID = {id_cultura}')
         else:
             # Captura os novos dados
             nome = input('Digite o nome do cultura......: ')

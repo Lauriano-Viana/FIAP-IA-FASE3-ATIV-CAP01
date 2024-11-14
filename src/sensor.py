@@ -11,12 +11,11 @@ def criar_sensor(conexao):
         tipo = input('Digite o tipo de sensor......: ')
         tipo = tipo.upper()
         descricao = input(' Digite uma breve descrição para o sensor:   ')
-        area = float(input(' Digite a area monitorada em mts pelo sensor:   '))
         localizacao = input(' Digite a localizacao do sensor:   ')
 
         cadastro = f""" 
             INSERT INTO sensores (id_sensor,tipo, descricao, localizacao) 
-            VALUES (seq_sensores.NEXTVAL,'{tipo}', '{descricao}',{area} ,'{localizacao}')
+            VALUES (seq_sensores.NEXTVAL,'{tipo}', '{descricao}','{localizacao}')
             """
         cursor.execute(cadastro)
         conexao.commit()
@@ -41,7 +40,7 @@ def listar_sensores(conexao):
             lista_dados.append(sensor)
         lista_dados = sorted(lista_dados)
         # Gera um Dataframe com os dados da lista usando o Pandas
-        dados_df = pd.DataFrame.from_records(lista_dados, columns = ['Id','Tipo','Descricao','Area','Localizacao'], 
+        dados_df = pd.DataFrame.from_records(lista_dados, columns = ['Id','Tipo','Descricao',  'Localizacao'], 
                                              index ='Id')
         if dados_df.empty:
             print(f'Não há sensores cadastrados!!')
@@ -77,11 +76,12 @@ def alterar_sensor(conexao):
             # Captura os novos dados
             novo_tipo = input('Digite o tipo de sensor......:    ')
             nova_descricao = input(' Digite uma breve descrição para o sensor: \n')
-            nova_area = float(input(' Digite a area monitorada em mts pelo sensor:   '))
             nova_localizacao = input(' Digite a localizacao do sensor........:   ')
 
-            alteracao = f""" UPDATE sensores SET tipo='{novo_tipo}', descricao='{nova_descricao}', 
-                             area={nova_area},localizacao='{nova_localizacao}' 
+            alteracao = f""" UPDATE sensores SET 
+                tipo='{novo_tipo}', 
+                descricao='{nova_descricao}', 
+                localizacao='{nova_localizacao}' 
                             """
             cursor.execute(alteracao)
             conexao.commit()
