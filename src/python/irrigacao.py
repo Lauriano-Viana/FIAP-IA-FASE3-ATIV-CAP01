@@ -2,36 +2,124 @@ import cx_Oracle
 import pandas as pd
 import os
 
-def get_leitura(conexao): # buscar os dados da ultima leitura executada
-    cursor = conexao.cursor()
-    cursor.execute("SELECT seq_leituras.CURRVAL FROM dual")
-    id_leitura = cursor.fetchone()
-    consulta = f""" SELECT id_leitura,id_cultura,leit_p,leit_k,leit_ph,leit_umidade FROM leituras WHERE id_leitura = {id_leitura}"""
-    cursor.execute(consulta)
-    leitura = cursor.fetchone()
-    return leitura
 
-def get_cultura(conexao,id_cultura): # buscar dados refentes a cultura da leitura
-    cursor = conexao.cursor()
-    cursor.execute(f"SELECT nome, nivel_p, nivel_k, nivel_ph, umidade FROM culturas WHERE id_cultura = '{id_cultura}'")
-    cultura = cursor.fetchone()
-    return cultura
 
-def verificar_nutrientes(cultura,leitura):
-    # dados referentes a leitura 
+def get_leitura(conexao):  # Buscar os dados da última leitura executada
+    try:
+        cursor = conexao.cursor()
+
+        # Consulta para obter o ID da última leitura
+        consulta = """
+        SELECT id_leitura 
+        FROM leituras
+        ORDER BY id_leitura DESC
+        """
+        cursor.execute(consulta)
+        ultima_leitura = cursor.fetchone()
+
+        # Verificar se há alguma leitura na tabela
+        if ultima_leitura is None:
+            print("Nenhuma leitura encontrada na tabela 'leituras'.")
+            cursor.close()
+            return None
+
+        id_leitura = ultima_leitura[0]
+        # print(f"Último id_leitura encontrado: {id_leitura}")
+
+        # Obter os dados completos da última leitura
+        consulta = f"""
+        SELECT * 
+        FROM leituras 
+        WHERE id_leitura = :id_leitura
+        """
+        cursor.execute(consulta, {"id_leitura": id_leitura})
+        leitura = cursor.fetchone()
+
+        cursor.close()
+
+        # Verificar se os dados foram encontrados
+        if leitura is None:
+            print(f"Nenhuma leitura encontrada para id_leitura = {id_leitura}.")
+            return None
+
+        return leitura
+
+    except cx_Oracle.DatabaseError as e:
+        print(f"Erro ao verificar leitura: {e}")
+        return None
+
+    except Exception as e:
+        print(f"get_leitura: Erro desconhecido: {e}")
+        return None
+
+    
+
+def get_cultura(conexao, id_cultura):
+    """Buscar dados referentes à cultura da leitura."""
+    try:    
+        cursor = conexao.cursor()
+
+        # Consulta usando parâmetros para evitar SQL Injection
+        consulta = """
+        SELECT nivel_p, nivel_k, nivel_ph, umidade 
+        FROM culturas 
+        WHERE id_cultura = :id_cultura
+        """
+        cursor.execute(consulta, {"id_cultura": id_cultura})
+        cultura = cursor.fetchone()
+
+        cursor.close()
+
+        if cultura is None:
+            print(f"Nenhuma cultura encontrada para id_cultura = {id_cultura}.")
+            return None
+
+        return cultura
+
+    except cx_Oracle.DatabaseError as e:
+        print(f"Erro ao verificar cultura: {e}")
+        return None
+
+    except Exception as e:
+        print(f"Erro desconhecido em get_cultura: {e}")
+        return None
+
+    
+def verificar_nutrientes(cultura, leitura):
+    """Verificar se os nutrientes da leitura estão abaixo dos níveis ideais da cultura."""
+    if leitura is None:
+        print("Erro: Leitura é None. Não é possível verificar nutrientes.")
+        return None
+
+    if len(leitura) < 7:  # Validar o tamanho esperado da tupla leitura
+        print(f"Erro: Leitura incompleta. Dados recebidos: {leitura}")
+        return None
+
+    if cultura is None:  # Garantir que os dados da cultura existem
+        print("Erro: Cultura é None. Não é possível verificar nutrientes.")
+        return None
+
+    # Dados da leitura
     valor_p = leitura[3]
     valor_k = leitura[4]
     valor_ph = leitura[5]
     valor_umidade = leitura[6]
-   
-    # dados referentes aos valores da cultura 
-    cultura_p, cultura_k ,cultura_ph ,cultura_umidade = cultura
 
-    tempo = 2000 # valor de tempo para irrigação niveis normais
-    if any(valor < cultura for valor, cultura in 
-       [(valor_p, cultura_p), (valor_k, cultura_k), (valor_ph, cultura_ph), (valor_umidade, cultura_umidade)]):
-        tempo = 3000
+    # Dados da cultura
+    nivel_p, nivel_k, nivel_ph, nivel_umidade = cultura
+
+    # Tempo padrão de irrigação
+    tempo = 2000  
+    
+
+    # Verificar se algum valor está abaixo do nível esperado
+    if any(valor < nivel for valor, nivel in 
+           [(valor_p, nivel_p), (valor_k, nivel_k), (valor_ph, nivel_ph), (valor_umidade, nivel_umidade)]):
+        tempo = 3000  # Ajustar tempo para maior irrigação
+
     return tempo
+
+
 
 def deletar_irrigacao(conexao):
     try:
@@ -82,29 +170,75 @@ def listar_irrigacoes(conexao):
     except cx_Oracle.DatabaseError as e:
         print(f"Erro ao listar irrigacao: {e}")
     except:
-        print('Erro desconhecido')
+        print('listar_irrigacoes: Erro desconhecido')
         input('Digite enter para continuar')
     else:
         input('Digite enter para continuar')
 
-# Procedimento para criar irrigação de cultura com base na leitura
 def aplicar_irrigacao(conexao):
-    cursor = conexao.cursor()
-    leitura = get_leitura(conexao)
-    id_leitura,id_cultura,leit_p,leit_k,leit_ph,leit_umidade = leitura
-    cultura = get_cultura(conexao,id_cultura)
-    tempo = verificar_nutrientes(leitura, cultura)
-    if tempo > 2000:
-        motivo = f'Nivel de nutrientes: BAIXO, tempo de irrigação mais longo {tempo/1000} segundos'
-    else:
-        motivo = f'Nivel de nutrientes: NORMAL, tempo de irrigação {tempo/1000} segundos'
-    cursor.execute("""
-        INSERT INTO irrigacoes 
-        (id_irrigacao,id_cultura, id_leitura, tempo, motivo, data_aplicacao) 
-        VALUES (seq_irrigacoes.NEXTVAL, :1, :2, :3, :4, :5, SYSDATE)
-    """, (id_cultura, id_leitura, tempo, motivo))
-    conexao.commit()
-    cursor.close()
+    """Função para aplicar irrigação baseada nos dados de leitura e cultura."""
+    try:
+        cursor = conexao.cursor()
+
+        # Obter a última leitura
+        leitura = get_leitura(conexao)
+        if leitura is None:
+            print("Erro: Nenhuma leitura disponível.")
+            return
+
+        # Extrair valores da leitura
+        id_leitura = leitura[0]
+        id_cultura = leitura[1]
+
+        # Obter dados da cultura
+        cultura = get_cultura(conexao, id_cultura)
+        if cultura is None:
+            print(f"Erro: Cultura não encontrada para id_cultura = {id_cultura}")
+            return
+
+        # Verificar nutrientes e calcular o tempo
+        tempo = verificar_nutrientes(cultura, leitura)
+        if tempo is None:
+            print("Erro: Não foi possível calcular o tempo de irrigação.")
+            return
+
+        # Decidir o motivo com base no tempo
+        motivo = (
+            f'Nível de nutrientes: BAIXO, tempo de irrigação mais longo {tempo/1000:.2f} segundos'
+            if tempo > 2000
+            else f'Nível de nutrientes: NORMAL, tempo de irrigação {tempo/1000:.2f} segundos'
+        )
+
+        # Inserir dados de irrigação no banco de dados
+        consulta = """
+            INSERT INTO irrigacoes 
+            (id_irrigacao, id_cultura, id_leitura, tempo, motivo, data_aplicacao) 
+            VALUES (seq_irrigacoes.NEXTVAL, :id_cultura, :id_leitura, :tempo, :motivo, SYSDATE)
+        """
+        cursor.execute(
+            consulta,
+            {
+                "id_cultura": id_cultura,
+                "id_leitura": id_leitura,
+                "tempo": tempo,
+                "motivo": motivo,
+            }
+        )
+
+        # Confirmar as alterações
+        conexao.commit()
+        print(f"\nIrrigação aplicada com sucesso: \nTempo = {tempo} ms \n Motivo = '{motivo}'")
+
+    except cx_Oracle.DatabaseError as e:
+        print(f"Erro ao aplicar irrigação: {e}")
+
+    except Exception as e:
+        print(f"Erro desconhecido em aplicar_irrigacao: {e}")
+
+    finally:
+        # Garantir o fechamento do cursor
+        cursor.close()
+
 
 def menu_irrigacao(conexao,conectado):
     while conectado:

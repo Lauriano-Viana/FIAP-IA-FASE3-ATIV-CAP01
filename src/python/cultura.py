@@ -13,7 +13,11 @@ def criar_cultura(conexao):
         print(f'Para cultura de {nome} informe os niveis ideais de:')
         nivel_p = float(input('Fosforo: '))
         nivel_k = float(input('Potassio: '))
-        nivel_ph = float(input('Ph do Solo: '))
+        # Validação para nivel_ph entre 0 e 14
+        while True:
+            nivel_ph = float(input('Digite o valor de pH do solo (0 a 14): '))
+            if 0 <= nivel_ph <= 14:
+                break
         umidade = float(input('Umidade: '))
         
         cadastro = f""" 

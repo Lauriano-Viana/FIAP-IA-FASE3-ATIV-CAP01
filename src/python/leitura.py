@@ -1,24 +1,27 @@
 import cx_Oracle
 import pandas as pd
 import os
-from irrigacao import aplicar_irrigacao
+from irrigacao import *
 
 def check_cultura(conexao): # Verifica se a cultura está cadastrado
-        id_cultura = int(input(f' Digite o id da cultura:   '))
+      
+        id = int(input(f' Digite o id da cultura:   '))
         lista_dados = [] #lista para captura de dados
         cursor = conexao.cursor()
-        consulta = f""" SELECT * FROM culturas WHERE id_cultura = {id_cultura}"""
+        consulta = f""" SELECT id_cultura FROM culturas WHERE id_cultura = {id}"""
         cursor.execute(consulta)
         data = cursor.fetchall()
         for dt in data:
             lista_dados.append(dt)
         if len(lista_dados)==0:
-            msg = f'Não há uma cultura cadastrada com o ID = {id_cultura}'
-            id_cultura = 0       
-        return id_cultura,msg
+            msg = f'Não há uma cultura cadastrada com o ID = {id}'
+        else:    
+            return id,msg
+
 
 
 def check_sensor(conexao): # Verifica se o sensor está cadastrado
+    try:
         id_sensor = int(input(f' Digite o id do sensor da leitura:   '))
         lista_dados = [] #lista para captura de dados
         cursor = conexao.cursor()
@@ -29,8 +32,16 @@ def check_sensor(conexao): # Verifica se o sensor está cadastrado
             lista_dados.append(dt)
         if len(lista_dados)==0:
             msg = f'Não há um sensor cadastrado com o ID = {id_sensor}' 
-            id_sensor = 0     
+            id_sensor = 0  
+        # cursor.close()
         return id_sensor, msg
+    except cx_Oracle.DatabaseError as e:
+        print(f"Erro ao verificar sensor: {e}")
+    except ValueError:
+        print(' Digite somente numero(s) no(s) campo(s) solicitado(s) ')
+    except:
+        print('check_sensor: Erro desconhecido')
+    input(' Pressione enter para continuar')   
         
         
 
@@ -42,35 +53,57 @@ def criar_leitura(conexao):
         os.system('clear')
         print('-------------CADASTRAR LEITURA------------------\n')
         cursor = conexao.cursor()
-        msg1 = ""
-        id_cultura,msg = check_cultura(conexao)
-        msg1 = msg
-        id_sensor,msg = check_sensor(conexao)
-        msg1 += '\n' + msg
-        if  (id_sensor == 0) or (id_cultura == 0):
-            print(msg1)
-        else:
+
+        id_cultura = int(input(f' Digite o id da cultura:   '))
+        lista_dados = [] #lista para captura de dados
+        cursor = conexao.cursor()
+        consulta = f""" SELECT id_cultura FROM culturas WHERE id_cultura = {id_cultura}"""
+        cursor.execute(consulta)
+        data = cursor.fetchall()
+        for dt in data:
+            lista_dados.append(dt)
+        if len(lista_dados)==0:
+            print(f'Não há uma cultura cadastrada com o ID = {id}')
+            id_cultura = 0
+        
+        id_sensor = int(input(f' Digite o id do sensor da leitura:   '))
+        lista_dados = [] #lista para captura de dados
+        cursor = conexao.cursor()
+        consulta = f""" SELECT * FROM sensores WHERE id_sensor = {id_sensor}"""
+        cursor.execute(consulta)
+        data = cursor.fetchall()
+        for dt in data:
+            lista_dados.append(dt)
+        if len(lista_dados)==0:
+            print(f'Não há um sensor cadastrado com o ID = {id_sensor}')
+            id_sensor = 0
+        if  (id_sensor) and (id_cultura):            
             valor_p = float(input(' Digite a valor de Fosforo (P):   '))
             valor_k = float(input(' Digite a valor de Potassio(K):   '))
-            valor_ph = float(input(' Digite a valor de PH do solo:   '))
+            # Validação para valor_ph entre 0 e 14
+            while True:
+                valor_ph = float(input('Digite o valor de pH do solo (0 a 14): '))
+                if 0 <= valor_ph <= 14:
+                    break
+                print("Erro: O valor de pH deve estar no intervalo de 0 a 14. Tente novamente.")
             valor_umidade = float(input(' Digite a valor de umidade:   '))
             cadastro = f"""
                 INSERT INTO leituras (id_leitura,id_cultura,id_sensor, leit_p,leit_k,leit_ph,leit_umidade, data_leitura)
-                VALUES (seq_leituras.NEXTVAL,{id_cultura},{id_sensor},{valor_p},{valor_k},{valor_ph},{valor_umidade} SYSDATE)
+                VALUES (seq_leituras.NEXTVAL,{id_cultura},{id_sensor},{valor_p},{valor_k},{valor_ph},{valor_umidade}, SYSDATE)
                 
-            """
+            """            
             cursor.execute(cadastro)
             conexao.commit()
             cursor.close()
             print('Leitura criada com sucesso!!')
-                  
+              
 
     except cx_Oracle.DatabaseError as e:
         print(f"Erro ao criar leitura: {e}")
     except ValueError:
         print(' Digite somente numero(s) no(s) campo(s) solicitado(s) ')
     except:
-        print('Erro desconhecido')
+        print('criar_leit: Erro desconhecido')
     input(' Pressione enter para continuar')
 
 # Função para listar leituras
@@ -128,10 +161,10 @@ def deletar_leitura(conexao):
     input(' Pressione qualquer tecla para continuar')
 
 # Função para criar um Menu para Leituras
-def menu_leitura(conexao,conectado):
+def menu_leitura(conexao, conectado):
     while conectado:
         os.system('clear')
-        print('-----------Operacoes Leitura-----------------')
+        print('----------- Operações Leitura -----------------')
         print("""
         1 - Cadastrar Leitura
         2 - Listar Leituras
@@ -140,21 +173,38 @@ def menu_leitura(conexao,conectado):
         """)
         escolha = input('Escolha -> ')
 
-        if escolha.isdigit():
-            escolha = int(escolha)
+        if not escolha.isdigit():  # Verificar se a entrada é um número
+            print("Erro: Você deve digitar um número.\nReinicie a aplicação!")
+            escolha = 4  # Retornar ao menu inicial
         else:
-            escolha = 4
-            print('Digite um numero.\nReinicie a Aplicação!')
+            escolha = int(escolha)
+
         os.system('clear')
+
         match escolha:
             case 1:
-                criar_leitura(conexao)
-                aplicar_irrigacao(conexao)
+                try:
+                    criar_leitura(conexao)  # Criar uma nova leitura
+                    #print("Leitura cadastrada com sucesso.")
+                    aplicar_irrigacao(conexao)  # Chamar função para aplicar irrigação
+                except Exception as e:
+                    print(f"Erro ao cadastrar leitura ou aplicar irrigação: {e}")
+                input("Pressione Enter para continuar...")
             case 2:
-                listar_leituras(conexao)
+                try:
+                    listar_leituras(conexao)  # Listar todas as leituras
+                except Exception as e:
+                    print(f"Erro ao listar leituras: {e}")
+                input("Pressione Enter para continuar...")
             case 3:
-                deletar_leitura(conexao)
+                try:
+                    deletar_leitura(conexao)  # Excluir uma leitura
+                except Exception as e:
+                    print(f"Erro ao excluir leitura: {e}")
+                input("Pressione Enter para continuar...")
             case 4:
-                conectado = False
+                conectado = False  # Sair do menu
             case _:
-                input('Digite um numero entre 1 e 4.')
+                print("Erro: Opção inválida. Escolha um número entre 1 e 4.")
+                input("Pressione Enter para continuar...")
+

@@ -2,7 +2,7 @@ from conection import conectar_banco
 from sensor import menu_sensor
 from leitura import menu_leitura
 from cultura import menu_cultura
-from irrigacao import criar_aplicacao
+from irrigacao import menu_irrigacao
 
 import os
 
@@ -18,7 +18,7 @@ def main():
         1 - Sensores
         2 - Leituras
         3 - culturas
-        4 - Aplicar culturas        
+        4 - Irrigacao        
         5 - Sair
         """)
         escolha = input('Escolha -> ')
@@ -37,7 +37,7 @@ def main():
             case 3:
                 menu_cultura(conexao,conectado)
             case 4:
-                criar_aplicacao(conexao)
+                menu_irrigacao(conexao,conectado)
             case 5:
                 conexao.close()
                 conectado = False
