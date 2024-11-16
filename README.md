@@ -47,11 +47,11 @@ Nota: Os comportamentos de hardware dos sensores e os valores de entrada são ge
   * **Listar:** Exibir o histórico de irrigações.
   * **Deletar:** Remover uma irrigação do histórico (para fins de limpeza de dados).
 
-  ###  imagens do circuito da plataforma Wokwi.com as conexões dos sensores solicitados
+  ##  imagens do circuito da plataforma Wokwi.com as conexões dos sensores solicitados
 
   ![diagram wokwi](monitor-irrig.png)
 
-  ### link video youtube
-  link do vídeo postado no Youtube (sem listagem), demonstrando o funcionamento completo do projeto
+  ## link video youtube
+    link do vídeo postado no Youtube (sem listagem), demonstrando o funcionamento completo do projeto
   **link:**
     https://youtu.be/WCAkkt9Af1c
