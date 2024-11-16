@@ -4,7 +4,7 @@ Este sistema tem como objetivo otimizar a irrigação de culturas, monitorando e
 
 Nota: Os comportamentos de hardware dos sensores e os valores de entrada são gerados por um simulador no Wokwi e inseridos manualmente no sistema para análise e atuação.
 
-## Base de Dados
+## Base de Dados 
  **Tabelas:**
   * **culturas:** Armazena informações sobre as diferentes culturas, como nome, níveis ideais de nutrientes e umidade.
   * **sensores:** Guarda detalhes sobre os sensores utilizados, como tipo, descrição e localização.
@@ -27,18 +27,31 @@ Nota: Os comportamentos de hardware dos sensores e os valores de entrada são ge
 
 4. **Registro:**
    * Toda vez que um novo registro de leitura é criado na tabela leituras, o sistema gera automaticamente um registro na tabela irrigacoes atrelado à leitura recém-criada. Isso assegura que cada medição relevante tenha uma resposta automatizada registrada no sistema.
+
 ## Operações CRUD
+
 * **Sensores:**
   * **Criar:** Adicionar um novo sensor ao sistema.
   * **Listar:** Exibir todos os sensores cadastrados.
   * **Atualizar:** Modificar as informações de um sensor existente.
   * **Deletar:** Remover um sensor do sistema.
+
 * **Culturas:**
   * **Criar:** Cadastrar uma nova cultura com seus respectivos níveis ideais.
   * **Listar:** Exibir todas as culturas cadastradas.
   * **Atualizar:** Modificar as informações de uma cultura existente.
   * **Deletar:** Remover uma cultura do sistema.
+
 * **Irrigação:**
-    * **Criar:** Cria uma nova irrigacao de forma automatizada, sempŕe que se cria uma leitura.
+    * **Criar:** Cria uma nova irrigacao de forma automatizada, sempre que uma leitura é registrada
   * **Listar:** Exibir o histórico de irrigações.
   * **Deletar:** Remover uma irrigação do histórico (para fins de limpeza de dados).
+
+  ###  imagens do circuito da plataforma Wokwi.com as conexões dos sensores solicitados
+
+  ![diagram wokwi](monitor-irrig.png)
+
+  ### link video youtube
+  link do vídeo postado no Youtube (sem listagem), demonstrando o funcionamento completo do projeto
+  **link:**
+    https://youtu.be/WCAkkt9Af1c

@@ -151,29 +151,29 @@ def deletar_irrigacao(conexao):
 # Função para listar irrigacoes
 def listar_irrigacoes(conexao):
     try:
+        os.system('clear')
         lista_dados = [] #lista para captura de dados 
         cursor = conexao.cursor()
-        cursor.execute("SELECT * FROM irrigacoes ")
-        #Captura os registros e armazena no obj aplicacoes
-        aplicacoes = cursor.fetchall()
-        for aplicacao in aplicacoes:
-            lista_dados.append(aplicacao)
+        cursor.execute("SELECT * FROM irrigacoes")
+        #Captura os registros e armazena no obj culturas
+        irrigacoes = cursor.fetchall()
+        for irrigacao in irrigacoes:
+            lista_dados.append(irrigacao)
         lista_dados = sorted(lista_dados)
         # Gera um Dataframe com os dados da lista usando o Pandas
-        dados_df = pd.DataFrame.from_records(lista_dados, columns = ['Id','Id_cultura','Id_leitura','tempo','data'], 
+        dados_df = pd.DataFrame.from_records(lista_dados, columns = ['Id', 'id_cultura', 'id_leitua', 'tempo', 'motivo', 'data_aplicacao'], 
                                              index ='Id')
         if dados_df.empty:
-            print(f'Não há irrigacoes cadastradas!!')
+            print(f'Não há culturas cadastrados!!')
         else:
             print(dados_df)
+        print('\nLISTADOS!')
         cursor.close()
     except cx_Oracle.DatabaseError as e:
-        print(f"Erro ao listar irrigacao: {e}")
-    except:
-        print('listar_irrigacoes: Erro desconhecido')
-        input('Digite enter para continuar')
-    else:
-        input('Digite enter para continuar')
+        print(f"Erro ao ler culturas: {e}")
+    input(' Pressione enter para continuar')
+
+
 
 def aplicar_irrigacao(conexao):
     """Função para aplicar irrigação baseada nos dados de leitura e cultura."""
